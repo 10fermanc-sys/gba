@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GOROM-sys GBA</title>
+    <style>
+        html, body { height: 100%; margin: 0; background-color: #1a1a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .container { width: 100%; height: 100%; display: none; }
+        #game { width: 100%; height: 100%; }
+        .controls { margin-bottom: 10px; color: white; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <label for="rom_input">Select a ROM file:</label>
+        <input type="file" id="rom_input" accept=".gba,.zip" />
+    </div>
+    <div class="container">
+        <div id="game"></div>
+    </div>
+
+    <script>
+        // --- EmulatorJS Configuration ---
+
+        // 1. The element to render the emulator in
+        EJS_player = '#game';
+
+        // 2. The core to use. 'gba' for Game Boy Advance.
+        EJS_core = 'gba';
+
+        // 3. The URL to the game ROM.
+        //    This will be set by the file input.
+        EJS_gameUrl = undefined;
+
+        // 4. Path to the emulator assets (cores, wasm, etc.)
+        //    Using the stable CDN for GitHub Pages.
+        EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+        // Suppress default start button and auto-launch the emulator
+        EJS_startOnLoaded = true;
+        EJS_startButtonName = '';
+        EJS_alignStartButton = false;
+
+        document.getElementById('rom_input').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                if (window.EJS_emulator) {
+                        // If an emulator instance already exists, we need to destroy it to load a new game.
+                        // This is just an example; you might need a more robust way to handle this.
+                        document.getElementById('game').innerHTML = '';
+                }
+
+                var file = e.target.files[0];
+                EJS_gameUrl = URL.createObjectURL(file);
+                
+                // Remove the ROM selector and show the emulator
+                document.querySelector('.controls').remove();
+                document.querySelector('.container').style.display = 'block';
+                
+                // We need to load the emulator script again to start the new game.
+                var loaderScript = document.querySelector('script[src*="loader.js"]');
+                if(loaderScript) {
+                        loaderScript.remove();
+                }
+                var script = document.createElement('script');
+                script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+                document.body.appendChild(script);
+            }
+        });
+    </script>
+    <!-- Removed static loader include to prevent initial start button -->
+</body>
+</html>
