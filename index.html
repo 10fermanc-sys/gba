@@ -171,6 +171,10 @@
         function loadRom(romPath) {
             // Clean up existing emulator
             if (window.EJS_emulator) {
+                // Properly destroy the emulator instance if a destroy method exists
+                if (typeof window.EJS_emulator.destroy === 'function') {
+                    window.EJS_emulator.destroy();
+                }
                 document.getElementById('game').innerHTML = '';
             }
 
@@ -182,21 +186,28 @@
             document.querySelector('.container').style.display = 'block';
             
             // Load the emulator
-            var loaderScript = document.querySelector('script[src*="loader.js"]');
+            const loaderScript = document.querySelector('script[src*="loader.js"]');
             if(loaderScript) {
                 loaderScript.remove();
             }
-            var script = document.createElement('script');
+            const script = document.createElement('script');
             script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
             document.body.appendChild(script);
         }
 
         // --- File Input Handler ---
+        let currentBlobUrl = null;
+        
         document.getElementById('rom_input').addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
-                var file = e.target.files[0];
-                var blobUrl = URL.createObjectURL(file);
-                loadRom(blobUrl);
+                // Revoke previous blob URL to prevent memory leaks
+                if (currentBlobUrl) {
+                    URL.revokeObjectURL(currentBlobUrl);
+                }
+                
+                const file = e.target.files[0];
+                currentBlobUrl = URL.createObjectURL(file);
+                loadRom(currentBlobUrl);
             }
         });
 
