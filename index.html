@@ -5,22 +5,130 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GOROM-sys GBA</title>
     <style>
-        html, body { height: 100%; margin: 0; background-color: #1a1a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .container { width: 100%; height: 100%; display: none; }
-        #game { width: 100%; height: 100%; }
-        .controls { margin-bottom: 10px; color: white; text-align: center; }
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            background-color: #1a1a1a; 
+            font-family: Arial, sans-serif;
+        }
+        .main-layout {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #2a2a2a;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #3a3a3a;
+        }
+        .sidebar h2 {
+            color: #ffffff;
+            margin-top: 0;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .rom-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .rom-button {
+            background-color: #4a4a4a;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+        .rom-button:hover {
+            background-color: #5a5a5a;
+        }
+        .rom-button:active {
+            background-color: #6a6a6a;
+        }
+        .file-input-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #3a3a3a;
+        }
+        .file-input-section label {
+            color: #aaaaaa;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .file-input-section input[type="file"] {
+            width: 100%;
+            color: white;
+            font-size: 12px;
+        }
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { 
+            width: 100%; 
+            height: 100%; 
+            display: none; 
+        }
+        #game { 
+            width: 100%; 
+            height: 100%; 
+        }
+        .welcome-message {
+            color: #aaaaaa;
+            text-align: center;
+            padding: 40px;
+        }
+        .welcome-message h1 {
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
-    <div class="controls">
-        <label for="rom_input">Select a ROM file:</label>
-        <input type="file" id="rom_input" accept=".gba,.zip" />
-    </div>
-    <div class="container">
-        <div id="game"></div>
+    <div class="main-layout">
+        <!-- Left Sidebar with ROM List -->
+        <div class="sidebar">
+            <h2>ROMs</h2>
+            <div id="rom-list" class="rom-list">
+                <!-- ROM buttons will be generated here -->
+            </div>
+            <div class="file-input-section">
+                <label for="rom_input">Or select a local file:</label>
+                <input type="file" id="rom_input" accept=".gba,.zip" />
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-area">
+            <div class="welcome-message" id="welcome">
+                <h1>GOROM-sys GBA Emulator</h1>
+                <p>Select a ROM from the list on the left to start playing.</p>
+            </div>
+            <div class="container">
+                <div id="game"></div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // --- ROM List Configuration ---
+        // Add your ROMs here. Place the ROM files in the 'roms/' folder.
+        const ROM_LIST = [
+            // Example: { name: 'Pokemon FireRed', file: 'pokemon-firered.gba' },
+            // Example: { name: 'Super Mario Advance', file: 'super-mario-advance.gba' },
+            // Add your ROMs here
+        ];
+
         // --- EmulatorJS Configuration ---
 
         // 1. The element to render the emulator in
@@ -30,7 +138,7 @@
         EJS_core = 'gba';
 
         // 3. The URL to the game ROM.
-        //    This will be set by the file input.
+        //    This will be set by the file input or ROM selection.
         EJS_gameUrl = undefined;
 
         // 4. Path to the emulator assets (cores, wasm, etc.)
@@ -41,31 +149,59 @@
         EJS_startButtonName = '';
         EJS_alignStartButton = false;
 
+        // --- ROM List Generation ---
+        function generateRomList() {
+            const romListContainer = document.getElementById('rom-list');
+            
+            if (ROM_LIST.length === 0) {
+                romListContainer.innerHTML = '<p style="color: #888; font-size: 12px;">No ROMs configured. Add ROMs to the roms/ folder and update ROM_LIST in index.html.</p>';
+                return;
+            }
+
+            ROM_LIST.forEach(rom => {
+                const button = document.createElement('button');
+                button.className = 'rom-button';
+                button.textContent = rom.name;
+                button.addEventListener('click', () => loadRom(`roms/${rom.file}`));
+                romListContainer.appendChild(button);
+            });
+        }
+
+        // --- Load ROM Function ---
+        function loadRom(romPath) {
+            // Clean up existing emulator
+            if (window.EJS_emulator) {
+                document.getElementById('game').innerHTML = '';
+            }
+
+            // Set the ROM URL
+            EJS_gameUrl = romPath;
+            
+            // Hide welcome message and show emulator container
+            document.getElementById('welcome').style.display = 'none';
+            document.querySelector('.container').style.display = 'block';
+            
+            // Load the emulator
+            var loaderScript = document.querySelector('script[src*="loader.js"]');
+            if(loaderScript) {
+                loaderScript.remove();
+            }
+            var script = document.createElement('script');
+            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            document.body.appendChild(script);
+        }
+
+        // --- File Input Handler ---
         document.getElementById('rom_input').addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
-                if (window.EJS_emulator) {
-                        // If an emulator instance already exists, we need to destroy it to load a new game.
-                        // This is just an example; you might need a more robust way to handle this.
-                        document.getElementById('game').innerHTML = '';
-                }
-
                 var file = e.target.files[0];
-                EJS_gameUrl = URL.createObjectURL(file);
-                
-                // Remove the ROM selector and show the emulator
-                document.querySelector('.controls').remove();
-                document.querySelector('.container').style.display = 'block';
-                
-                // We need to load the emulator script again to start the new game.
-                var loaderScript = document.querySelector('script[src*="loader.js"]');
-                if(loaderScript) {
-                        loaderScript.remove();
-                }
-                var script = document.createElement('script');
-                script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-                document.body.appendChild(script);
+                var blobUrl = URL.createObjectURL(file);
+                loadRom(blobUrl);
             }
         });
+
+        // Initialize ROM list on page load
+        window.addEventListener('DOMContentLoaded', generateRomList);
     </script>
     <!-- Removed static loader include to prevent initial start button -->
 </body>
