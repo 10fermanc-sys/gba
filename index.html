@@ -16,6 +16,13 @@
             height: 100vh;
             width: 100vw;
         }
+        .main-layout.game-active .sidebar {
+            display: none;
+        }
+        .main-layout.game-active .content-area {
+            flex: 1;
+            width: 100%;
+        }
         .sidebar {
             width: 250px;
             background-color: #2a2a2a;
@@ -124,7 +131,11 @@
         // --- ROM List Configuration ---
         // Add your ROMs here. Place the ROM files in the 'roms/' folder.
         const ROM_LIST = [
-            // Example: { name: 'Pokemon FireRed', file: 'pokemon-firered.gba' },
+        { name: 'Pokemon Emerald', file: 'Pokemon - Emerald Version (USA, Europe).gba' },
+        { name: 'The Legend of Zelda: The Minish Cap', file: 'Legend of Zelda, The - The Minish Cap (USA).gba' },
+        { name: 'Metroid Fusion', file: 'Metroid Fusion (USA).gba' },
+
+        // Example: { name: 'Pokemon FireRed', file: 'pokemon-firered.gba' },
             // Example: { name: 'Super Mario Advance', file: 'super-mario-advance.gba' },
             // Add your ROMs here
         ];
@@ -184,6 +195,7 @@
             // Hide welcome message and show emulator container
             document.getElementById('welcome').style.display = 'none';
             document.querySelector('.container').style.display = 'block';
+            document.querySelector('.main-layout').classList.add('game-active');
             
             // Load the emulator
             const loaderScript = document.querySelector('script[src*="loader.js"]');
